@@ -12,7 +12,7 @@ const publicLinks = [
 ];
 
 const authLinks = [
-  { href: "/library", label: "Shelf" },
+  { href: "/library", label: "Your Shelf" },
   { href: "/search", label: "Search" },
 ];
 
@@ -25,7 +25,7 @@ export default function Navbar() {
   return (
     <nav className="flex items-center gap-6 border-b border-border px-6 py-4">
       <span className="font-bold">Shelfie</span>
-      <div className="flex flex-1 gap-4">
+      <div className="flex flex-1 gap-5">
         {links.map((link) => {
           const isActive = pathname === link.href;
           return (

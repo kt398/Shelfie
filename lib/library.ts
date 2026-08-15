@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import type { LibraryEntry, MediaItem, MediaSource, LibraryStatus, MediaType } from "@prisma/client";
 
 export type LibraryEntryWithMedia = LibraryEntry & { mediaItem: MediaItem };
+export type LibraryEntryWithMediaAndTags = LibraryEntryWithMedia & { tags: string[] };
 export type LibrarySort = "recent" | "rating" | "title";
 
 
@@ -11,12 +12,20 @@ export const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   BOOK: "Book",
 };
 
+export type TagFilterMode = "AND" | "OR";
 
 export async function getLibraryEntries(
   userId: string,
-  filters: { status?: LibraryStatus; type?: MediaType; sort?: LibrarySort; query?: string; } = {}
+  filters: {
+    status?: LibraryStatus;
+    type?: MediaType;
+    sort?: LibrarySort;
+    query?: string;
+    tags?: string[];
+    tagMode?: TagFilterMode;
+  } = {}
 ): Promise<LibraryEntryWithMedia[]> {
-  const { status, query, type, sort = "recent" } = filters;
+  const { status, type,  sort = "recent",  query , tags, tagMode = "OR"} = filters;
 
   const mediaItemFilter: { type?: MediaType; title?: { contains: string; mode: "insensitive" } } = {};
   if (type) mediaItemFilter.type = type;
@@ -34,6 +43,11 @@ export async function getLibraryEntries(
       userId,
       ...(status ? { status } : {}),
       ...(Object.keys(mediaItemFilter).length > 0 ? { mediaItem: mediaItemFilter } : {}),
+      ...(tags && tags.length > 0
+        ? tagMode === "AND"
+          ? { AND: tags.map((tagName) => ({ tags: { some: { tagName } } })) }
+          : { tags: { some: { tagName: { in: tags } } } }
+        : {}),
     },
     include: { mediaItem: true },
     orderBy,
@@ -43,11 +57,14 @@ export async function getLibraryEntries(
 export async function getLibraryEntryById(
   userId: string,
   id: string
-): Promise<LibraryEntryWithMedia | null> {
-  return prisma.libraryEntry.findFirst({
+): Promise<LibraryEntryWithMediaAndTags | null> {
+  const entry = await prisma.libraryEntry.findFirst({
     where: { id, userId },
-    include: { mediaItem: true },
+    include: { mediaItem: true, tags: { select: { tagName: true } } },
   });
+  if (!entry) return null;
+
+  return { ...entry, tags: entry.tags.map((t) => t.tagName) };
 }
 
 export async function getLibraryStatusCounts(userId: string): Promise<Record<LibraryStatus, number>> {
@@ -114,6 +131,14 @@ export const SORT_OPTIONS = [
 
 export function parseSortParam(value?: string): LibrarySort {
   return value === "rating" || value === "title" ? value : "recent";
+}
+
+export function parseTagsParam(value?: string): string[] {
+  return value ? value.split(",").filter(Boolean) : [];
+}
+
+export function parseTagModeParam(value?: string): TagFilterMode {
+  return value === "AND" ? "AND" : "OR";
 }
 
 export async function getLibraryExternalIds(

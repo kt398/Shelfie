@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import Link from "next/link";
-import type { LibraryStatus } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { LibraryStatus, type MediaType } from "@prisma/client";
 import { updateStatusAction, type LibraryActionState } from "../actions";
 import type { LibraryEntryWithMedia } from "@/lib/library";
 import { MEDIA_TYPE_LABELS } from "@/lib/library";
+import Button from "@/components/Button";
 export const STATUS_LABELS: Record<LibraryStatus, string> = {
   PLANNED: "Planned",
   IN_PROGRESS: "In Progress",
@@ -15,34 +17,63 @@ export const STATUS_LABELS: Record<LibraryStatus, string> = {
 };
 
 export const STATUS_BADGE_STYLES: Record<LibraryStatus, string> = {
-  PLANNED: "bg-gray-100 dark:bg-gray-400",
-  IN_PROGRESS: "bg-blue-100 dark:bg-blue-400",
-  COMPLETED: "bg-green-100 dark:bg-emerald-500",
-  DROPPED: "bg-red-100 dark:bg-red-900",
-  ON_HOLD: "bg-amber-100 dark:bg-amber-900",
+  PLANNED: "bg-gray-400",
+  IN_PROGRESS: "bg-blue-400",
+  COMPLETED: "bg-emerald-500",
+  DROPPED: "bg-red-900",
+  ON_HOLD: "bg-yellow-500",
 };
 
-const STATUS_SELECT_OPTIONS: { value: LibraryStatus; label: string }[] = [
-  { value: "PLANNED", label: "Planned" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "DROPPED", label: "Dropped" },
-  { value: "ON_HOLD", label: "On Hold" },
-];
+const STATUS_CYCLE: LibraryStatus[] = ["PLANNED", "IN_PROGRESS", "COMPLETED", "ON_HOLD", "DROPPED"];
+
+function getInProgressLabel(mediaType: MediaType): string {
+  return mediaType === "BOOK" ? "Reading" : "Watching";
+}
+
+function getStatusText(current: LibraryStatus, mediaType: MediaType): string {
+  switch(current){
+    case "ON_HOLD":
+    case "PLANNED": return `Mark as ${getInProgressLabel(mediaType)}`
+    case "IN_PROGRESS": return "Mark as Completed"
+    case "COMPLETED":
+    case "DROPPED": return "View details"
+  }
+}
+
+function getNextStatus(current: LibraryStatus): LibraryStatus {
+  switch (current) {
+    case "PLANNED":
+    case "ON_HOLD": return LibraryStatus.IN_PROGRESS;
+    case "IN_PROGRESS":
+    case "COMPLETED": return LibraryStatus.COMPLETED;
+    case "DROPPED": return LibraryStatus.DROPPED;
+  }
+}
+
 
 const initialState: LibraryActionState = { status: "idle" };
 
 export default function LibraryCard({ entry }: { entry: LibraryEntryWithMedia }) {
+  const router = useRouter();
   const boundAction = updateStatusAction.bind(null, entry.id);
-  const [, formAction] = useActionState(boundAction, initialState);
+  const [, updateStatus] = useActionState(boundAction, initialState);
+
+  function handleStatusClick() {
+    if (entry.status === LibraryStatus.COMPLETED || entry.status === LibraryStatus.DROPPED) {
+      router.push(`/library/${entry.id}?from=library`);
+      return;
+    }
+    startTransition(() => updateStatus(getNextStatus(entry.status)));
+  }
+
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-md border border-border">
+    <div className="group relative flex flex-col overflow-hidden rounded-md border border-border" >
       <Link href={`/library/${entry.id}?from=library`} className="contents">
         <div className="relative">
           <div className="aspect-2/3 w-full bg-muted
           after:content-[''] after:absolute after:inset-0 after:bg-linear-to-t 
-          after:from-black after:to-transparent after:pointer-events-none
+          after:from-black/80 dark:after:from-black after:to-transparent after:pointer-events-none
           ">
             {entry.mediaItem.posterUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -57,12 +88,15 @@ export default function LibraryCard({ entry }: { entry: LibraryEntryWithMedia })
               </div>
             )}
           </div>
-          <div className={`absolute top-2 left-0.5 text-[10px] py-0.5 px-1 font-mono font-medium rounded-md ${STATUS_BADGE_STYLES[entry.status]} `}>
-            {STATUS_LABELS[entry.status].toUpperCase()}
+          <div className={`absolute top-2 left-0.5 text-[10.5px] py-0.5 px-1 tracking-wide font-mono font-medium text-white rounded-md ${STATUS_BADGE_STYLES[entry.status]} `}>
+            {(entry.status === LibraryStatus.IN_PROGRESS
+              ? getInProgressLabel(entry.mediaItem.type)
+              : STATUS_LABELS[entry.status]
+            ).toUpperCase()}
           </div>
           <div className="absolute bottom-2 left-0.5 p-1">
-            <h1 className="text-m font-[Georgia]">{entry.mediaItem.title}</h1>
-            <p className="text-[9px] text-muted-foreground font-mono">
+            <h1 className="text-m text-white font-[Georgia]">{entry.mediaItem.title}</h1>
+            <p className="text-[10px] text-gray-300 font-mono">
               {MEDIA_TYPE_LABELS[entry.mediaItem.type]} · {entry.mediaItem.releaseYear}
             </p>
           </div>
@@ -74,15 +108,14 @@ export default function LibraryCard({ entry }: { entry: LibraryEntryWithMedia })
           )}
         </div>
       </Link>
-      <form action={formAction} onChange={(e) => e.currentTarget.requestSubmit()} className="px-3 pb-3">
-        <select name="status" defaultValue={entry.status} className="w-full rounded border border-border px-2 py-1 text-xs">
-          {STATUS_SELECT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </form>
+      <Button
+        onClick={handleStatusClick}
+        className="bg-gray-600! hover:bg-gray-600/90! text-white dark:bg-black/60! absolute inset-x-0 bottom-0 translate-y-full px-3 py-2
+        transition-transform duration-150 group-hover:translate-y-0
+        group-focus-within:translate-y-0"
+      >
+        {getStatusText(entry.status, entry.mediaItem.type)}
+      </Button>
     </div>
   );
 }

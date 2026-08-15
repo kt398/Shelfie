@@ -4,7 +4,7 @@
 import { ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "destructive";
+  variant?: "primary" | "secondary" | "ghost" | "destructive" | "variant";
   // For option/toggle buttons (e.g. one of a set of choices). When provided,
   // this overrides `variant` and sets aria-pressed for toggle semantics.
   selected?: boolean;
@@ -19,10 +19,12 @@ const variants = {
     "text-muted-foreground hover:bg-muted active:bg-muted/70",
   destructive:
     "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80",
+  variant:
+    "bg-variant text-primary-foreground hover:bg-variant/90 active:bg-variant/80"
 };
 
 export default function Button({
-  variant = "primary",
+  variant = "secondary",
   selected,
   className = "",
   ...props

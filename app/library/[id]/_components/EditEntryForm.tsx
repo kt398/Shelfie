@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import type { LibraryStatus } from "@prisma/client";
-import { updateEntryAction, type LibraryActionState } from "../../actions";
+import { updateEntryAction, toggleEntryTagAction, type LibraryActionState } from "../../actions";
 import { STATUS_LABELS } from "../../_components/LibraryCard";
-import type { LibraryEntryWithMedia } from "@/lib/library";
+import type { LibraryEntryWithMediaAndTags } from "@/lib/library";
 import StarRating from "@/components/StarRating";
+import Button from "@/components/Button";
+import { Tag } from "@prisma/client";
 
 const initialState: LibraryActionState = { status: "idle" };
 
@@ -13,28 +15,37 @@ function toDateInputValue(date: Date | null): string {
   return date ? date.toISOString().slice(0, 10) : "";
 }
 
-export default function EditEntryForm({ entry }: { entry: LibraryEntryWithMedia }) {
+type EditEntryFormProps = {
+  entry: LibraryEntryWithMediaAndTags;
+  allTags: Tag[];
+};
+
+export default function EditEntryForm({ entry, allTags }: EditEntryFormProps) {
   const boundAction = updateEntryAction.bind(null, entry.id);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
+  const [status, setStatus] = useState<LibraryStatus>(entry.status);
 
+  
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1 block text-xs text-muted-foreground font-[Segoe UI]" htmlFor="status">
+        <label className="mb-1 block text-xs text-muted-foreground font-[Segoe UI]">
           Status
         </label>
-        <select
-          id="status"
-          name="status"
-          defaultValue={entry.status}
-          className="w-full rounded border border-border px-3 py-2"
-        >
+        <input type="hidden" name="status" value={status} />
+        <div className="flex flex-wrap gap-2">
           {(Object.keys(STATUS_LABELS) as LibraryStatus[]).map((s) => (
-            <option key={s} value={s}>
+            <Button
+              key={s}
+              type="button"
+              variant="variant"
+              selected={status === s}
+              onClick={() => setStatus(s)}
+            >
               {STATUS_LABELS[s]}
-            </option>
+            </Button>
           ))}
-        </select>
+        </div>
       </div>
 
       <div>
@@ -73,6 +84,19 @@ export default function EditEntryForm({ entry }: { entry: LibraryEntryWithMedia 
           />
         </div>
       </div>
+      <div>
+        <label className="mb-1 block text-sm text-muted-foreground font-[Segoe UI]">
+          Custom Tags
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {allTags.map((tag) => (
+            <EntryTagButton key={tag.name} entryId={entry.id} tag={tag} assigned={entry.tags.includes(tag.name)} />
+          ))}
+          {allTags.length === 0 && (
+            <p className="text-sm text-muted-foreground">No tags yet — add some in Settings.</p>
+          )}
+        </div>
+      </div>
 
       <div>
         <label className="mb-1 block text-sm text-muted-foreground font-[Segoe UI]" htmlFor="comment">
@@ -97,5 +121,22 @@ export default function EditEntryForm({ entry }: { entry: LibraryEntryWithMedia 
       {state.status === "error" && <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>}
       {state.status === "success" && <p className="text-sm text-green-700 dark:text-green-400">Saved.</p>}
     </form>
+  );
+}
+
+function EntryTagButton({ entryId, tag, assigned }: { entryId: string; tag: Tag; assigned: boolean }) {
+  const boundAction = toggleEntryTagAction.bind(null, entryId, tag.name);
+  const [, toggleTag, pending] = useActionState(boundAction, initialState);
+
+  return (
+    <Button
+      type="button"
+      variant="variant"
+      selected={assigned}
+      disabled={pending}
+      onClick={() => startTransition(() => toggleTag())}
+    >
+      {tag.name}
+    </Button>
   );
 }

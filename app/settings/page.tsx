@@ -1,8 +1,10 @@
 import ThemeToggle from "./_components/ThemeToggle";
 import Button from "@/components/Button";
 import PreferenceOption from "./_components/PreferenceOption";
+import TagsDialog from "./_components/TagsDialog";
 import { getServerSession } from "@/lib/session";
 import { getUserPreferences } from "@/lib/preferences";
+import { getUserTags } from "@/lib/tags";
 
 export default async function SettingsPage() {
   const session = await getServerSession();
@@ -11,6 +13,7 @@ export default async function SettingsPage() {
   }
 
   const prefs = await getUserPreferences(session.user.id);
+  const tags = await getUserTags(session.user.id);
   return (
     <div className="mx-auto max-w-xl px-6 py-12">
       <h1 className="text-2xl font-bold my-4">Theme</h1>
@@ -48,6 +51,11 @@ export default async function SettingsPage() {
           active={prefs.defaultDateFinished === "EMPTY"}
         />
       </div>
+      <hr className="my-6 border-t border-border" />
+
+      <h1 className="my-4 text-2xl font-bold">Custom Tags</h1>
+      <TagsDialog tags={tags} />
+      <hr className="my-6 border-t border-border" />
 
       <h1 className="my-4 text-2xl font-bold">Import/Export Data</h1>
       <Button className="block my-4" variant="primary">Export</Button>

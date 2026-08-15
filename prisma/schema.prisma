@@ -63,8 +63,9 @@ model LibraryEntry {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  mediaItem MediaItem @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaItem MediaItem      @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags      LibraryEntryTag[]
 
   @@unique([userId, mediaItemId])
   @@index([userId])
@@ -84,9 +85,34 @@ model User {
   accounts       Account[]
   libraryEntries LibraryEntry[]
   preferences    UserPreferences?
+  tags           Tag[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Tag {
+  userId String
+  name   String
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  libraryEntryTags LibraryEntryTag[]
+
+  @@id([userId, name])
+  @@map("tag")
+}
+
+model LibraryEntryTag {
+  libraryEntryId String
+  userId         String
+  tagName        String
+
+  libraryEntry LibraryEntry @relation(fields: [libraryEntryId], references: [id], onDelete: Cascade)
+  tag          Tag          @relation(fields: [userId, tagName], references: [userId, name], onDelete: Cascade)
+
+  @@id([libraryEntryId, tagName])
+  @@index([userId, tagName])
+  @@map("library_entry_tag")
 }
 
 model UserPreferences {

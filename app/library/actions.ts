@@ -15,12 +15,12 @@ export type LibraryActionState =
 export async function updateStatusAction(
   entryId: string,
   _prevState: LibraryActionState,
-  formData: FormData
+  status: string
 ): Promise<LibraryActionState> {
   const session = await getServerSession();
   if (!session?.user) return { status: "error", message: "You must be signed in." };
 
-  const parsed = updateStatusSchema.safeParse({ status: formData.get("status") });
+  const parsed = updateStatusSchema.safeParse({ status });
   if (!parsed.success) return { status: "error", message: "Invalid status." };
 
   const result = await prisma.libraryEntry.updateMany({
@@ -66,6 +66,37 @@ export async function updateEntryAction(
   if (result.count === 0) return { status: "error", message: "Entry not found." };
 
   revalidatePath("/library");
+  revalidatePath(`/library/${entryId}`);
+  return { status: "success" };
+}
+
+export async function toggleEntryTagAction(
+  entryId: string,
+  tagName: string,
+  _prevState: LibraryActionState
+): Promise<LibraryActionState> {
+  const session = await getServerSession();
+  if (!session?.user) return { status: "error", message: "You must be signed in." };
+
+  const entry = await prisma.libraryEntry.findFirst({
+    where: { id: entryId, userId: session.user.id },
+  });
+  if (!entry) return { status: "error", message: "Entry not found." };
+
+  const existing = await prisma.libraryEntryTag.findUnique({
+    where: { libraryEntryId_tagName: { libraryEntryId: entryId, tagName } },
+  });
+
+  if (existing) {
+    await prisma.libraryEntryTag.delete({
+      where: { libraryEntryId_tagName: { libraryEntryId: entryId, tagName } },
+    });
+  } else {
+    await prisma.libraryEntryTag.create({
+      data: { libraryEntryId: entryId, userId: session.user.id, tagName },
+    });
+  }
+
   revalidatePath(`/library/${entryId}`);
   return { status: "success" };
 }

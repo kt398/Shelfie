@@ -1,34 +1,46 @@
 import Link from "next/link";
 import { getServerSession } from "@/lib/session";
-import { getLibraryEntries, parseStatusParam, parseTypeParam, parseSortParam } from "@/lib/library";
+import {
+  getLibraryEntries,
+  parseStatusParam,
+  parseTypeParam,
+  parseSortParam,
+  parseTagsParam,
+  parseTagModeParam,
+} from "@/lib/library";
 import LibraryCard from "./_components/LibraryCard";
 import { Suspense } from "react";
 import Sidebar from "./_components/Sidebar";
 import Header from "./_components/Header";
 import { getLibraryStatusCounts } from "@/lib/library";
+import { getUserTags } from "@/lib/tags";
 export const dynamic = "force-dynamic";
 
 type LibraryPageProps = {
-  searchParams: Promise<{ status?: string; type?: string; sort?: string; q?: string}>;
+  searchParams: Promise<{ status?: string; type?: string; sort?: string; q?: string; tags?: string; tagMode?: string }>;
 };
 
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
-  const { status, type, sort, q } = await searchParams;
+  const { status, type, sort, q, tags, tagMode } = await searchParams;
 
   const session = await getServerSession();
   if (!session?.user) {
     return <p className="text-muted-foreground">Please sign in to view your library.</p>;
   }
 
-  const hasActiveFilters = Boolean(status || type || q);
+  const parsedTags = parseTagsParam(tags);
+  const hasActiveFilters = Boolean(status || type || q || parsedTags.length > 0);
   const entries = await getLibraryEntries(session.user.id, {
     status: parseStatusParam(status),
     type: parseTypeParam(type),
     sort: parseSortParam(sort),
     query: q,
+    tags: parsedTags,
+    tagMode: parseTagModeParam(tagMode),
   });
   const counts = await getLibraryStatusCounts(session.user.id);
+  const userTags = await getUserTags(session.user.id);
 
   if (entries.length === 0) {
     if (!hasActiveFilters) {
@@ -51,7 +63,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
     </Suspense>
     <div className="flex flex-1">
       <Suspense fallback={null}>
-        <Sidebar />
+        <Sidebar allTags={userTags.map((t) => t.name)} />
       </Suspense>
       {/*Display in case active filters hide all entires*/}
       {entries.length === 0 && hasActiveFilters &&     

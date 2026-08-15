@@ -5,7 +5,7 @@
 
 
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
   --border: #e5e7eb;
   --muted: #f3f4f6;
@@ -14,7 +14,7 @@
   --primary-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --variant: #e3a84f;
+  --variant: #c8862b;
 }
 
 @theme inline {
@@ -38,6 +38,8 @@
   --border: #1f2937;
   --muted: #1f2937;
   --muted-foreground: #9ca3af;
+  --variant: #e3a84f;
+  /*--primary: #e3a84f;*/
 }
 
 body {
