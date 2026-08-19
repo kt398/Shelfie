@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { signUpSchema } from "@/lib/validation/auth";
+import GoogleIcon from "@/components/GoogleIcon";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -92,8 +93,9 @@ export default function SignupPage() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="w-full rounded border border-border px-4 py-2 hover:bg-muted"
+        className="flex w-full items-center justify-center gap-2 rounded border border-border px-4 py-2 hover:bg-muted"
       >
+        <GoogleIcon />
         Continue with Google
       </button>
 
