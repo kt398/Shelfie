@@ -20,7 +20,7 @@ export default function LibrarySearch(){
         const params = new URLSearchParams(searchParams.toString());
         if (value) params.set("q", value);
         else params.delete("q");
-        router.push(`${pathname}?${params.toString()}`);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
         }, 300);
 
         return () => clearTimeout(timeout);
