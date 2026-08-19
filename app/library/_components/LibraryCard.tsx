@@ -94,18 +94,18 @@ export default function LibraryCard({ entry }: { entry: LibraryEntryWithMedia })
               : STATUS_LABELS[entry.status]
             ).toUpperCase()}
           </div>
-          <div className="absolute bottom-2 left-0.5 p-1">
+          <div className="absolute bottom-0 left-0.5 right-0.5 p-1">
             <h1 className="text-m text-white font-[Georgia]">{entry.mediaItem.title}</h1>
-            <p className="text-[10px] text-gray-300 font-mono">
-              {MEDIA_TYPE_LABELS[entry.mediaItem.type]} · {entry.mediaItem.releaseYear}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] text-gray-300 font-mono">
+                {MEDIA_TYPE_LABELS[entry.mediaItem.type]} · {entry.mediaItem.releaseYear}
+              </p>
+              {entry.rating != null && (
+                <span className="text-[10px] text-amber-400">{"★".repeat(entry.rating)}</span>
+              )}
+            </div>
           </div>
 
-        </div>
-        <div className="flex flex-col gap-1 p-3">
-          {entry.rating != null && (
-            <span className="text-xs text-amber-400">{"★".repeat(entry.rating)}</span>
-          )}
         </div>
       </Link>
       <Button
