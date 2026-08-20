@@ -61,7 +61,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
     <Suspense fallback={null}>
       <Header counts={counts}/>
     </Suspense>
-    <div className="flex flex-1">
+    <div className="flex flex-1 gap-2">
       <Suspense fallback={null}>
         <Sidebar allTags={userTags.map((t) => t.name)} />
       </Suspense>

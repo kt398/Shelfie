@@ -94,7 +94,7 @@ function LoginForm() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="flex w-full items-center justify-center gap-2 rounded border border-border px-4 py-2 hover:bg-muted"
+        className="flex w-full items-center justify-center gap-2 rounded border border-border px-4 py-1 hover:bg-muted"
       >
         <GoogleIcon />
         Continue with Google
