@@ -95,7 +95,7 @@ export default function LibraryCard({ entry }: { entry: LibraryEntryWithMedia })
             ).toUpperCase()}
           </div>
           <div className="absolute bottom-0 left-0.5 right-0.5 p-1">
-            <h1 className="text-m text-white font-[Georgia]">{entry.mediaItem.title}</h1>
+            <h1 className="line-clamp-3 text-sm leading-tight text-white font-[Georgia]">{entry.mediaItem.title}</h1>
             <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] text-gray-300 font-mono">
                 {MEDIA_TYPE_LABELS[entry.mediaItem.type]} · {entry.mediaItem.releaseYear}
