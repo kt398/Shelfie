@@ -6,10 +6,9 @@ import { authClient } from "@/lib/auth-client";
 import { Settings } from "lucide-react";
 
 
-const publicLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-];
+const homeLink = { href: "/", label: "Home" };
+
+const publicLinks = [{ href: "/about", label: "About" }];
 
 const authLinks = [
   { href: "/library", label: "Your Shelf" },
@@ -20,7 +19,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
 
-  const links = !isPending && session ? [...publicLinks, ...authLinks] : publicLinks;
+  const isSignedIn = !isPending && !!session;
+  const links = isSignedIn ? [...publicLinks, ...authLinks] : [homeLink, ...publicLinks];
 
   return (
     <nav className="flex items-center gap-6 border-b border-border px-6 py-4">
