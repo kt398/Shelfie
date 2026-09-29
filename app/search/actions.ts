@@ -1,22 +1,23 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { MediaSource, MediaType } from '@prisma/client';
+import { LibraryStatus, MediaSource, MediaType } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getServerSession } from '@/lib/session';
 import { getOmdbById } from '@/lib/omdb';
 import { getBookById } from '@/lib/googlebooks';
+import { updateStatusSchema } from '@/lib/validation/library';
 
 export type AddToLibraryState =
   | { status: 'idle' }
-  | { status: 'success' }
+  | { status: 'success'; libraryStatus: LibraryStatus }
   | { status: 'error'; message: string };
 
 export async function addToLibraryAction(
   id: string,
   source: 'OMDB' | 'GOOGLE_BOOKS',
   _prevState: AddToLibraryState,
-  _formData: FormData
+  formData: FormData
 ): Promise<AddToLibraryState> {
   const session = await getServerSession();
   if (!session?.user) {
@@ -25,6 +26,14 @@ export async function addToLibraryAction(
       message: 'You must be signed in to add to your library.',
     };
   }
+
+  const parsedStatus = updateStatusSchema.safeParse({
+    status: formData.get('status'),
+  });
+  if (!parsedStatus.success) {
+    return { status: 'error', message: 'Invalid status.' };
+  }
+  const libraryStatus = parsedStatus.data.status as LibraryStatus;
 
   let mediaItemData: {
     type: MediaType;
@@ -105,7 +114,7 @@ export async function addToLibraryAction(
     create: mediaItemData,
   });
 
-  await prisma.libraryEntry.upsert({
+  const entry = await prisma.libraryEntry.upsert({
     where: {
       userId_mediaItemId: {
         userId: session.user.id,
@@ -113,9 +122,13 @@ export async function addToLibraryAction(
       },
     },
     update: {},
-    create: { userId: session.user.id, mediaItemId: mediaItem.id },
+    create: {
+      userId: session.user.id,
+      mediaItemId: mediaItem.id,
+      status: libraryStatus,
+    },
   });
 
   revalidatePath('/search');
-  return { status: 'success' };
+  return { status: 'success', libraryStatus: entry.status };
 }

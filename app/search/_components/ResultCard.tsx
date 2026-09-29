@@ -1,24 +1,26 @@
+import type { LibraryStatus, MediaType } from '@prisma/client';
 import type { OmdbSearchResultItem } from '@/lib/omdb';
 import type { BooksSearchResultItem } from '@/lib/googlebooks';
-import AddToLibraryButton from './AddToLibraryButton';
+import { MEDIA_TYPE_LABELS } from '@/lib/library';
+import AddToLibraryTray from './AddToLibraryTray';
 
 export default function ResultCard({
   result,
-  inLibrary,
+  libraryStatus,
 }: {
   result: OmdbSearchResultItem | BooksSearchResultItem;
-  inLibrary: boolean;
+  libraryStatus?: LibraryStatus;
 }) {
-  const badgeLabel =
+  const mediaType: MediaType =
     result.source === 'OMDB'
       ? result.type === 'series'
         ? 'TV'
-        : 'Movie'
-      : 'Book';
+        : 'MOVIE'
+      : 'BOOK';
 
   return (
-    <div className="flex flex-col overflow-hidden rounded border border-border">
-      <div className="aspect-[2/3] w-full bg-muted">
+    <div className="group relative flex flex-col overflow-hidden rounded-md border border-border">
+      <div className="aspect-2/3 w-full bg-muted after:pointer-events-none after:absolute after:inset-0 after:bg-linear-to-t after:from-black/80 after:to-transparent after:content-[''] dark:after:from-black">
         {result.posterUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -32,22 +34,21 @@ export default function ResultCard({
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <span className="w-fit rounded bg-muted px-2 py-0.5 text-xs uppercase text-muted-foreground">
-          {badgeLabel}
-        </span>
-        <h3 className="text-sm font-semibold">{result.title}</h3>
-        <p className="text-xs text-muted-foreground">{result.year}</p>
-        <div className="mt-auto pt-2">
-          {inLibrary ? (
-            <span className="block rounded bg-green-100 dark:bg-green-900/30 px-3 py-1.5 text-center text-sm text-green-700 dark:text-green-400">
-              In Library
-            </span>
-          ) : (
-            <AddToLibraryButton id={result.id} source={result.source} />
-          )}
-        </div>
-      </div>
+      <AddToLibraryTray
+        id={result.id}
+        source={result.source}
+        mediaType={mediaType}
+        typeLabel={mediaType === 'TV' ? 'TV' : MEDIA_TYPE_LABELS[mediaType]}
+        libraryStatus={libraryStatus}
+      >
+        <h3 className="line-clamp-3 font-[Georgia] text-sm leading-tight text-white">
+          {result.title}
+        </h3>
+        <p className="font-mono text-[10px] text-gray-300">
+          {MEDIA_TYPE_LABELS[mediaType]}
+          {result.year ? ` · ${result.year}` : ''}
+        </p>
+      </AddToLibraryTray>
     </div>
   );
 }

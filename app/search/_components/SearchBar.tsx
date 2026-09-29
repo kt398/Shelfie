@@ -7,7 +7,7 @@ const TYPE_OPTIONS: {
   value: '' | 'movie' | 'series' | 'books';
   label: string;
 }[] = [
-  { value: '', label: 'All' },
+  { value: '', label: 'Movies and TV Shows' },
   { value: 'movie', label: 'Movies' },
   { value: 'series', label: 'TV Shows' },
   { value: 'books', label: 'Books' },

@@ -141,20 +141,20 @@ export function parseTagModeParam(value?: string): TagFilterMode {
   return value === "AND" ? "AND" : "OR";
 }
 
-export async function getLibraryExternalIds(
+export async function getLibraryStatuses(
   userId: string,
   source: MediaSource,
   externalIds: string[]
-): Promise<Set<string>> {
-  if (externalIds.length === 0) return new Set();
+): Promise<Map<string, LibraryStatus>> {
+  if (externalIds.length === 0) return new Map();
 
   const entries = await prisma.libraryEntry.findMany({
     where: {
       userId,
       mediaItem: { source, externalId: { in: externalIds } },
     },
-    select: { mediaItem: { select: { externalId: true } } },
+    select: { status: true, mediaItem: { select: { externalId: true } } },
   });
 
-  return new Set(entries.map((e) => e.mediaItem.externalId));
+  return new Map(entries.map((e) => [e.mediaItem.externalId, e.status]));
 }

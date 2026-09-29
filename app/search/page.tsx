@@ -6,7 +6,7 @@ import {
   type OmdbSearchOutcome,
 } from '@/lib/omdb';
 import { searchBooks, type BooksSearchOutcome } from '@/lib/googlebooks';
-import { getLibraryExternalIds } from '@/lib/library';
+import { getLibraryStatuses } from '@/lib/library';
 import ResultCard from './_components/ResultCard';
 import Pagination from './_components/Pagination';
 type SearchPageProps = {
@@ -73,7 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   const externalIds = outcome.results.map((r) => r.id);
-  const inLibrary = await getLibraryExternalIds(
+  const libraryStatuses = await getLibraryStatuses(
     session.user.id,
     mediaSource,
     externalIds
@@ -81,12 +81,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-1 m-6">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {outcome.results.map((result) => (
             <ResultCard
               key={result.id}
               result={result}
-              inLibrary={inLibrary.has(result.id)}
+              libraryStatus={libraryStatuses.get(result.id)}
             />
           ))}
         </div>

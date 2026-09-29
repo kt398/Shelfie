@@ -26,7 +26,7 @@ export const STATUS_BADGE_STYLES: Record<LibraryStatus, string> = {
 
 const STATUS_CYCLE: LibraryStatus[] = ["PLANNED", "IN_PROGRESS", "COMPLETED", "ON_HOLD", "DROPPED"];
 
-function getInProgressLabel(mediaType: MediaType): string {
+export function getInProgressLabel(mediaType: MediaType): string {
   return mediaType === "BOOK" ? "Reading" : "Watching";
 }
 
