@@ -18,7 +18,7 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-xl px-6 py-12">
       <h1 className="text-2xl font-bold my-4">Theme</h1>
       <ThemeToggle/>
-      <hr className="my-6 border-t border-border" />
+      {/* <hr className="my-6 border-t border-border" />
       <h1 className="text-2xl font-bold my-4">General</h1>
       <h2 className="text-lg font-bold my-4">Default Start Date</h2>
       <div className="flex gap-2">
@@ -51,20 +51,20 @@ export default async function SettingsPage() {
           active={prefs.defaultDateFinished === "EMPTY"}
         />
       </div>
-      <hr className="my-6 border-t border-border" />
+      <hr className="my-6 border-t border-border" /> */}
 
       <h1 className="my-4 text-2xl font-bold">Custom Tags</h1>
       <TagsDialog tags={tags} />
       <hr className="my-6 border-t border-border" />
 
-      <h1 className="my-4 text-2xl font-bold">Import/Export Data</h1>
+      {/* <h1 className="my-4 text-2xl font-bold">Import/Export Data</h1>
       <Button className="block my-4" variant="primary">Export</Button>
       <Button className="block my-4" variant="primary">Import</Button>
       <hr className="my-6 border-t border-border" />
 
 
       <h1 className="my-4 text-2xl font-bold">Delete Account</h1>
-      <hr className="my-6 border-t border-border" />
+      <hr className="my-6 border-t border-border" /> */}
 
 
     </div>
